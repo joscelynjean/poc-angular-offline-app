@@ -1,0 +1,8 @@
+<div>
+  <button (click)="handleButtonClick($event)">Refresh hockey players</button>
+</div>
+<div>Latest fetching date : {{refreshDate}}</div>
+<div *ngIf="!isDataAvailable">No data is avaiable</div>
+<ul *ngFor="let hockeyPlayer of hockeyPlayers">
+  <li>{{hockeyPlayer.firstname}} {{hockeyPlayer.lastname}} ({{hockeyPlayer.id}})</li>
+</ul>
