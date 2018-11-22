@@ -1,3 +1,4 @@
+import { HttpCachingInterceptor } from './interceptors/http-caching.interceptor';
 import { Configuration } from './swagger-generated/configuration';
 import { ApiModule } from './swagger-generated/api.module';
 import { BrowserModule } from '@angular/platform-browser';
@@ -5,6 +6,7 @@ import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
 function ApiConfigurationFactory() {
   const apiConfiguration: Configuration = new Configuration({
@@ -22,7 +24,10 @@ function ApiConfigurationFactory() {
     AppRoutingModule,
     ApiModule.forRoot(ApiConfigurationFactory)
   ],
-  providers: [],
+  providers: [
+    // Add caching interceptor
+    { provide: HTTP_INTERCEPTORS, useClass: HttpCachingInterceptor, multi: true }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
