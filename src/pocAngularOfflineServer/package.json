@@ -1,0 +1,28 @@
+{
+  "name": "pocangularofflineserver",
+  "version": "1.0.0",
+  "description": "API to use as example",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -Rf dist && rm -f logs/*",
+    "build": "node_modules/.bin/tsc -p ./tsconfig.json",
+    "prettier": "node_modules/.bin/prettier --debug-check --config .prettierrc.json 'src/**/*.ts'",
+    "tslint": "node_modules/.bin/tslint -c tslint.json 'src/**/*.ts'",
+    "start": "node dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/cors": "^2.8.4",
+    "@types/express": "^4.16.0",
+    "prettier": "^1.15.2",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.6"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "winston": "^3.1.0"
+  }
+}
