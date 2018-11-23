@@ -3,6 +3,7 @@ import express from "express";
 import winston from "winston";
 import cors from "cors";
 
+// Create logger
 const logger = winston.createLogger({
   format: winston.format.json(),
   level: "info",
@@ -15,6 +16,9 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: "logs/combined.log" })
   ]
 });
+
+// Get datetime of the start of the API
+const lastModifiedDate: Date = new Date();
 
 // Create the application
 const app: express.Application = express();
@@ -37,14 +41,38 @@ app.get(
   "/hockey-players",
   (req, res): void => {
 
-    let hockeyPlayers: HockeyPlayer[] = [
-      { id: "131", firstname: "Carey", lastname: "Price" },
-      { id: "113", firstname: "Max", lastname: "Domi" },
-      { id: "192", firstname: "Jonathan", lastname: "Drouin" },
-      { id: "124", firstname: "Philippe", lastname: "Danault" },
-    ]
+    // Set this header for caching purpose
+    res.setHeader("last-modified", lastModifiedDate.toUTCString());
 
-    res.send(hockeyPlayers);
+    const ifLastModifiedSinceHeader = req.get('if-last-modified-since');
+    if (ifLastModifiedSinceHeader) {
+      const ifLastModifiedSinceDate = new Date(ifLastModifiedSinceHeader);
+      if (ifLastModifiedSinceDate >= lastModifiedDate) {
+        res.sendStatus(304);
+      }
+
+    } else {
+
+      // #1
+      let hockeyPlayers: HockeyPlayer[] = [
+        { id: "131", firstname: "Carey", lastname: "Price" },
+        { id: "113", firstname: "Max", lastname: "Domi" },
+        { id: "192", firstname: "Jonathan", lastname: "Drouin" },
+        { id: "124", firstname: "Philippe", lastname: "Danault" },
+      ]
+
+      // #2
+      /*
+      let hockeyPlayers: HockeyPlayer[] = [
+        { id: "130", firstname: "Antti", lastname: "Niemi" },
+        { id: "111", firstname: "Brendan", lastname: "Gallagher" },
+        { id: "127", firstname: "Karl", lastname: "Alzner" },
+        { id: "126", firstname: "Jeff", lastname: "Pretry" },
+      ]
+      */
+
+      res.json(hockeyPlayers);
+    }
   }
 );
 
