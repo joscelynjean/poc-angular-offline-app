@@ -1,8 +1,9 @@
-import { ApplicationDatabase } from './app-database';
+import { ApplicationDatabase } from './applicationDatabase';
 import { Injectable } from '@angular/core';
 
+// Service which provide our single instance of the embedded database.
 @Injectable()
-export class DexieService {
+export class EmbeddedDatabaseService {
 
   db: ApplicationDatabase;
 

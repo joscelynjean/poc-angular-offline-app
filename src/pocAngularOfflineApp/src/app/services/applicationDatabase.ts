@@ -1,7 +1,9 @@
 import Dexie from 'dexie';
 
+// This class extends Dexie so we can initiate it, migrate version if required
+// dans define our schema to use
 export class ApplicationDatabase extends Dexie {
-  cachedResponses: Dexie.Table<ICachedResponse, String>;
+  cachedResponses: Dexie.Table<IHttpCacheResponse, String>;
 
   constructor() {
     console.log('Initialize database...');
@@ -11,15 +13,15 @@ export class ApplicationDatabase extends Dexie {
 
     // Deine tables and indexes
     this.version(1).stores({
-      cachedResponses: 'url, responseBody, lastModified'
+      cachedResponses: 'url, body, lastModified'
     });
 
     console.log('database initialization done...');
   }
 }
 
-export interface ICachedResponse {
+export interface IHttpCacheResponse {
   url: string;
-  responseBody: any;
+  body: any;
   lastModified: string;
 }
