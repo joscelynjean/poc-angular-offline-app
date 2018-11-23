@@ -7,6 +7,7 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { DexieService } from './dexie/dexie.service';
 
 function ApiConfigurationFactory() {
   const apiConfiguration: Configuration = new Configuration({
@@ -25,6 +26,8 @@ function ApiConfigurationFactory() {
     ApiModule.forRoot(ApiConfigurationFactory)
   ],
   providers: [
+    // Caching
+    DexieService,
     // Add caching interceptor
     { provide: HTTP_INTERCEPTORS, useClass: HttpCachingInterceptor, multi: true }
   ],
