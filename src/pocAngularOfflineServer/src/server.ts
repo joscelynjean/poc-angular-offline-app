@@ -18,10 +18,15 @@ const logger = winston.createLogger({
 });
 
 // Get datetime of the start of the API
-const lastModifiedDate: Date = new Date();
+let lastModifiedDate: Date = new Date();
+lastModifiedDate.setMilliseconds(0);
 
 // Create the application
 const app: express.Application = express();
+
+// Remove all cache option
+const nocache = require('nocache');
+app.use(nocache());
 
 // Enable cors so our web application can reach the server
 app.use(cors())
@@ -45,40 +50,44 @@ app.get(
     res.setHeader("last-modified", lastModifiedDate.toUTCString());
 
     const ifLastModifiedSinceHeader = req.get('if-last-modified-since');
+    console.log(ifLastModifiedSinceHeader);
     if (ifLastModifiedSinceHeader) {
-      const ifLastModifiedSinceDate = new Date(ifLastModifiedSinceHeader);
-      if (ifLastModifiedSinceDate >= lastModifiedDate) {
+      const ifLastModifiedDate: Date = new Date(Date.parse(ifLastModifiedSinceHeader));
+
+      if (ifLastModifiedDate >= lastModifiedDate) {
+        console.log('Latest version, return 304');
         res.sendStatus(304);
+        return;
       }
 
-    } else {
-
-      // #1
-      let hockeyPlayers: HockeyPlayer[] = [
-        { id: "131", firstname: "Carey", lastname: "Price" },
-        { id: "113", firstname: "Max", lastname: "Domi" },
-        { id: "192", firstname: "Jonathan", lastname: "Drouin" },
-        { id: "124", firstname: "Philippe", lastname: "Danault" },
-      ]
-
-      // #2
-      /*
-      let hockeyPlayers: HockeyPlayer[] = [
-        { id: "130", firstname: "Antti", lastname: "Niemi" },
-        { id: "111", firstname: "Brendan", lastname: "Gallagher" },
-        { id: "127", firstname: "Karl", lastname: "Alzner" },
-        { id: "126", firstname: "Jeff", lastname: "Pretry" },
-      ]
-      */
-
-      res.json(hockeyPlayers);
     }
+    console.log('Not in cache, return 200');
+
+    // #1
+    let hockeyPlayers: HockeyPlayer[] = [
+      { id: "131", firstname: "Carey", lastname: "Price" },
+      { id: "113", firstname: "Max", lastname: "Domi" },
+      { id: "192", firstname: "Jonathan", lastname: "Drouin" },
+      { id: "124", firstname: "Philippe", lastname: "Danault" },
+    ]
+
+    // #2
+    /*
+    let hockeyPlayers: HockeyPlayer[] = [
+      { id: "130", firstname: "Antti", lastname: "Niemi" },
+      { id: "111", firstname: "Brendan", lastname: "Gallagher" },
+      { id: "127", firstname: "Karl", lastname: "Alzner" },
+      { id: "126", firstname: "Jeff", lastname: "Pretry" },
+    ]
+    */
+
+    res.json(hockeyPlayers);
+
   }
 );
 
 // The port the express app will listen on
 const port: number = 8080;
-logger.debug("Hello");
 app.listen(port, () => {
   // Success callback
   logger.info(`Listening at http://localhost:${port}/`);
