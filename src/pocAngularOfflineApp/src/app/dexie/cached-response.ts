@@ -2,12 +2,12 @@ import { ICachedResponse } from './app-database';
 
 export class CachedResponse implements ICachedResponse {
   url: string;
-  response: any;
-  lastModified: Date;
+  responseBody: any;
+  lastModified: string;
 
-  constructor(url: string, response: any, lastModified: Date) {
+  constructor(url: string, responseBody: any, lastModified: string) {
     this.url = url;
-    this.response = response;
+    this.responseBody = responseBody;
     this.lastModified = lastModified;
   }
 

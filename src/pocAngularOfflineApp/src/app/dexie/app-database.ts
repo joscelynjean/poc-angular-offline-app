@@ -11,7 +11,7 @@ export class ApplicationDatabase extends Dexie {
 
     // Deine tables and indexes
     this.version(1).stores({
-      cachedResponses: 'url, response, lastModified'
+      cachedResponses: 'url, responseBody, lastModified'
     });
 
     console.log('database initialization done...');
@@ -20,6 +20,6 @@ export class ApplicationDatabase extends Dexie {
 
 export interface ICachedResponse {
   url: string;
-  response: any;
-  lastModified: Date;
+  responseBody: any;
+  lastModified: string;
 }

@@ -32,7 +32,7 @@ export class HttpCachingInterceptor implements HttpInterceptor {
         // If there is a response in cache, put the date in header so the api won't send the data again
         if (cachedResponse) {
           const headers = new HttpHeaders({
-            'if-modified-since': cachedResponse.lastModified.toUTCString()
+            'if-modified-since': cachedResponse.lastModified
           });
 
           // Update headers
@@ -50,8 +50,8 @@ export class HttpCachingInterceptor implements HttpInterceptor {
               // Save everything in cache
               this.dexieService.db.cachedResponses.put({
                 url: req.url,
-                response: body,
-                lastModified: new Date()
+                responseBody: body,
+                lastModified: event.headers.get('last-modified')
               });
             }
 
@@ -62,7 +62,7 @@ export class HttpCachingInterceptor implements HttpInterceptor {
             if (err instanceof HttpErrorResponse) {
               const response: HttpResponse<any> = new HttpResponse({
                 status: 200,
-                body: sharedCacheResponse.response,
+                body: sharedCacheResponse.responseBody,
               });
               return of(response);
             }
