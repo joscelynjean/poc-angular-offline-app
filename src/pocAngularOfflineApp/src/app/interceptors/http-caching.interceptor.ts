@@ -1,61 +1,77 @@
 import { DexieService } from './../dexie/dexie.service';
-import { HockeyPlayer } from './../swagger-generated/model/hockeyPlayer';
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse, HttpErrorResponse } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { Observable, of, throwError, from } from 'rxjs';
+import { mergeMap, tap, catchError } from 'rxjs/operators';
 import { ICachedResponse } from '../dexie/app-database';
+import { resolve } from 'q';
 
 @Injectable()
 export class HttpCachingInterceptor implements HttpInterceptor {
 
   constructor(private dexieService: DexieService) { }
 
+  // Create observable to get the data from the embedded database
+  private getCachedResponse(url: string): Observable<ICachedResponse> {
+    const cachedResponsePromise: Promise<ICachedResponse> = this.dexieService.db.cachedResponses.get(url);
+    return from(cachedResponsePromise);
+  }
+
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    console.log(`Request intercepted by caching interceptor. Path is '${req.url}'`);
 
-    return next.handle(req).pipe(
-      // Retrieve the value so we can save it to the database
-      tap(event => {
-        if (event instanceof HttpResponse) {
-          const response = event.body;
-          console.log(response);
+    // Used to be accessible from the whole chain of observers
+    let sharedCacheResponse: ICachedResponse = null;
 
-          // Create new response to cache
-          const newCachedResponse: ICachedResponse = {
-            url: req.url,
-            response: response,
-            lastModified: new Date()
-          };
+    return this.getCachedResponse(req.url).pipe(
+      // Modify request headers if there is already something in cache
+      mergeMap((cachedResponse: ICachedResponse) => {
 
-          // Save to the database for later use
-          this.dexieService.db.cachedResponses.put(newCachedResponse);
-        }
-        return event;
-      }),
-      catchError((err, caught) => {
+        // Keep reference so we do not have to fetch it again later
+        sharedCacheResponse = cachedResponse;
 
-        // Require better logic but for the example, on error, return value cached
-        console.log('Error :', err);
-        console.log('Caught :', caught);
-
-        if (err instanceof HttpErrorResponse) {
-          const response: HttpResponse<any> = new HttpResponse({
-            status: 200,
-            body: [
-              { id: '130', firstname: 'Antti', lastname: 'Niemi' },
-              { id: '111', firstname: 'Brendan', lastname: 'Gallagher' },
-              { id: '127', firstname: 'Karl', lastname: 'Alzner' },
-              { id: '126', firstname: 'Jeff', lastname: 'Petry' },
-            ],
+        // If there is a response in cache, put the date in header so the api won't send the data again
+        if (cachedResponse) {
+          const headers = new HttpHeaders({
+            'if-modified-since': cachedResponse.lastModified.toUTCString()
           });
-          return of(response);
-        }
-        return throwError(err);
 
+          // Update headers
+          req = req.clone({ headers });
+        }
+
+        // Execute the request
+        return next.handle(req).pipe(
+          // Save the response in cache
+          tap(event => {
+
+            if (event instanceof HttpResponse) {
+              const body = event.body;
+
+              // Save everything in cache
+              this.dexieService.db.cachedResponses.put({
+                url: req.url,
+                response: body,
+                lastModified: new Date()
+              });
+            }
+
+          }),
+          // If any error occurs and a response in cache is available, return it.
+          catchError((err, caught) => {
+            // Require better logic but for the example, on error, return value cached
+            if (err instanceof HttpErrorResponse) {
+              const response: HttpResponse<any> = new HttpResponse({
+                status: 200,
+                body: sharedCacheResponse.response,
+              });
+              return of(response);
+            }
+            return throwError(err);
+
+          })
+        );
       })
     );
-
   }
 
 }

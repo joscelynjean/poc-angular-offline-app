@@ -22,9 +22,13 @@ const app: express.Application = express();
 // Enable cors so our web application can reach the server
 app.use(cors())
 
+// Remove etag
+app.set('etag', false); // turn off
+
 // Log request
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-  logger.info(`Request done to ${req.path}`);
+  logger.info(`Request to ${req.path}`);
+  logger.info(req.headers);
   next();
 });
 
